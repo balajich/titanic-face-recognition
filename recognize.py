@@ -1,13 +1,12 @@
 # USAGE
 # python recognize.py
 
-
+# import the necessary packages
 import argparse
 import pickle
 
 import cv2
 import imutils
-# import the necessary packages
 import numpy as np
 
 # construct the argument parser and parse the arguments
