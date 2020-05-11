@@ -1,5 +1,5 @@
 # USAGE
-# python recognize.py
+# python recognize_faces.py
 
 # import the necessary packages
 import argparse
@@ -10,21 +10,21 @@ import imutils
 import numpy as np
 
 # construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", default='./recognize-images/kate_leonardo.jpg',
-                help="path to input image")
-args = vars(ap.parse_args())
+argument_parser = argparse.ArgumentParser()
+argument_parser.add_argument("-i", "--image", default='./recognize-images/kate_leonardo.jpg',
+                             help="path to input image")
+args = vars(argument_parser.parse_args())
 
-# load our serialized face detector from disk
-print("[INFO] loading face detector...")
-detector = cv2.dnn.readNetFromCaffe("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
+# Reading face detector model from the disk
+print("Reading face detector model from the disk")
+face_detector_model = cv2.dnn.readNetFromCaffe("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
 
-# load our serialized face embedding model from disk
-print("[INFO] loading face recognizer...")
-embedder = cv2.dnn.readNetFromTorch('openface_nn4.small2.v1.t7')
+# Reading face embedding model from the disk
+print("Reading face embedding model from the disk")
+face_embedding_model = cv2.dnn.readNetFromTorch('openface_nn4.small2.v1.t7')
 
 # load the actual face recognition model along with the label encoder
-recognizer = pickle.loads(open('recognizer.pickle', "rb").read())
+recognizer_model = pickle.loads(open('model.pickle', "rb").read())
 le = pickle.loads(open('le.pickle', "rb").read())
 
 # load the image, resize it to have a width of 600 pixels (while
@@ -40,8 +40,8 @@ imageBlob = cv2.dnn.blobFromImage(
 
 # apply OpenCV's deep learning-based face detector to localize
 # faces in the input image
-detector.setInput(imageBlob)
-detections = detector.forward()
+face_detector_model.setInput(imageBlob)
+detections = face_detector_model.forward()
 
 # loop over the detections
 for i in range(0, detections.shape[2]):
@@ -69,11 +69,11 @@ for i in range(0, detections.shape[2]):
         # quantification of the face
         faceBlob = cv2.dnn.blobFromImage(face, 1.0 / 255, (96, 96),
                                          (0, 0, 0), swapRB=True, crop=False)
-        embedder.setInput(faceBlob)
-        vec = embedder.forward()
+        face_embedding_model.setInput(faceBlob)
+        vec = face_embedding_model.forward()
 
         # perform classification to recognize the face
-        preds = recognizer.predict_proba(vec)[0]
+        preds = recognizer_model.predict_proba(vec)[0]
         j = np.argmax(preds)
         proba = preds[j]
         name = le.classes_[j]

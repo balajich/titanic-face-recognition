@@ -15,38 +15,41 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import SVC
 
-# construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--dataset", default='dataset',
-                help="path to input directory of faces")
-args = vars(ap.parse_args())
+# Read arguments passed to script
+argument_parser = argparse.ArgumentParser()
+argument_parser.add_argument("-i", "--dataset", default='dataset',
+                             help="path to input directory of faces")
+args = vars(argument_parser.parse_args())
 
-# load our serialized face detector from disk
-print("[INFO] loading face detector...")
-detector = cv2.dnn.readNetFromCaffe("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
+# fix random seed for reproducibility - it allows that no matter if we execute
+# the code more than one time, the random values have to be the same
+seed = 7
+np.random.seed(seed)
 
-# load our serialized face embedding model from disk
-print("[INFO] loading face recognizer...")
-embedder = cv2.dnn.readNetFromTorch('openface_nn4.small2.v1.t7')
+# Reading face detector model from the disk
+print("Reading face detector model from the disk")
+face_detector_model = cv2.dnn.readNetFromCaffe("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
 
-# grab the paths to the input images in our dataset
-print("[INFO] quantifying faces...")
+# Reading face embedding model from the disk
+print("Reading face embedding model from the disk")
+face_embedding_model = cv2.dnn.readNetFromTorch('openface_nn4.small2.v1.t7')
+
+# Read train dataset of images
+print("Read train dataset of images")
 imagePaths = list(paths.list_images(args["dataset"]))
 
-# initialize our lists of extracted facial embeddings and
-# corresponding people names
-knownEmbeddings = []
-knownNames = []
+train_embeddings = []
+train_names = []
 
 # initialize the total number of faces processed
-total = 0
+total_no_of_faces_processed = 0
 
-# loop over the image paths
+# Iterate through train dataset
 for (i, imagePath) in enumerate(imagePaths):
     # extract the person name from the image path
-    print("[INFO] processing image {}/{}".format(i + 1,
-                                                 len(imagePaths)))
-    name = imagePath.split(os.path.sep)[-2]
+    face_name = imagePath.split(os.path.sep)[-2]
+    print(" processing image {}/{} - {}".format(i + 1,
+                                               len(imagePaths), face_name))
 
     # load the image, resize it to have a width of 600 pixels (while
     # maintaining the aspect ratio), and then grab the image
@@ -62,8 +65,8 @@ for (i, imagePath) in enumerate(imagePaths):
 
     # apply OpenCV's deep learning-based face detector to localize
     # faces in the input image
-    detector.setInput(imageBlob)
-    detections = detector.forward()
+    face_detector_model.setInput(imageBlob)
+    detections = face_detector_model.forward()
 
     # ensure at least one face was found
     if len(detections) > 0:
@@ -94,29 +97,25 @@ for (i, imagePath) in enumerate(imagePaths):
             # quantification of the face
             faceBlob = cv2.dnn.blobFromImage(face, 1.0 / 255,
                                              (96, 96), (0, 0, 0), swapRB=True, crop=False)
-            embedder.setInput(faceBlob)
-            vec = embedder.forward()
+            face_embedding_model.setInput(faceBlob)
+            vec = face_embedding_model.forward()
 
             # add the name of the person + corresponding face
             # embedding to their respective lists
-            knownNames.append(name)
-            knownEmbeddings.append(vec.flatten())
-            total += 1
+            train_names.append(face_name)
+            train_embeddings.append(vec.flatten())
+            total_no_of_faces_processed += 1
 
-data = {"embeddings": knownEmbeddings, "names": knownNames}
-
-# fix random seed for reproducibility - it allows that no matter if we execute
-# the code more than one time, the random values have to be the same
-seed = 7
-np.random.seed(seed)
+data_set = {"embeddings": train_embeddings, "names": train_names}
 
 # encode the labels
 print("[INFO] encoding labels...")
 le = LabelEncoder()
-labels = le.fit_transform(data["names"])
-X = np.array(data["embeddings"])
+labels = le.fit_transform(data_set["names"])
+X = np.array(data_set["embeddings"])
 y = np.array(labels)
 
+print('Train and evaluate the model')
 # define 10-fold cross validation test harness
 kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
 cvscores = []
@@ -124,10 +123,10 @@ cvscores = []
 for (train, test) in kfold.split(X, y):
     # train the model used to accept the 128-d embeddings of the face and
     # then produce the actual face recognition
-    print("[INFO] training model...")
-    recognizer = SVC(C=1.0, kernel="linear", probability=True)
-    recognizer.fit(X[train], y[train])
-    y_pred = recognizer.predict(X[test])
+    print("training model...")
+    recognizer_model = SVC(C=1.0, kernel="linear", probability=True)
+    recognizer_model.fit(X[train], y[train])
+    y_pred = recognizer_model.predict(X[test])
     accuracy = accuracy_score(y[test], y_pred)
     print('Accuracy Score :', accuracy)
     cvscores.append(accuracy * 100)
@@ -135,8 +134,8 @@ for (train, test) in kfold.split(X, y):
 print("Mean Accuracy: %.2f%% (Standard Deviation: +/- %.2f%%)" % (numpy.mean(cvscores), numpy.std(cvscores)))
 
 # write the actual face recognition model to disk
-f = open('recognizer.pickle', "wb")
-f.write(pickle.dumps(recognizer))
+f = open('model.pickle', "wb")
+f.write(pickle.dumps(recognizer_model))
 f.close()
 
 # write the label encoder to disk
