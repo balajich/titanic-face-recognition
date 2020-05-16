@@ -2,7 +2,6 @@
 In this tutorial we will try to identify actors from images of Titanic movie.We will train our machine learning model to identify only kate winslet, leonardo dicaprio and rest of them as unknown.
 ![leonardo dicaprio and kate winslet](readme-images/leonardo-Kate.png "leonardo dicaprio and kate winslet")
 ![Unknow and kate winslet ](readme-images/unknown-kate.png "Unknow and kate winslet")
-![leonardo dicaprio,kate winslet and Avengers](readme-images/avengers-kate-leonardo.png "leonardo dicaprio,kate winslet and Avengers")
 # Overview
 We will learn face detection using opencv, deep learning and machine learning libraries.
 * OpenCV is used to recognize faces in an image. It detects presence and location of a face in an image, but does not identify it.
@@ -37,6 +36,7 @@ Run scripts in below order
 # Performance
 Accuracy of current model is not great. You can improve its accuracy by adding more labelled train images 
 Mean Accuracy: 56.67% (Standard Deviation: +/- 24.94%)
+![leonardo dicaprio,kate winslet and Avengers](readme-images/avengers-kate-leonardo.png "leonardo dicaprio,kate winslet and Avengers")
 # References
 * I dont take any credit for this. I learned this entire implementation from article written by Adrian Rosebrock  in article https://www.pyimagesearch.com/2018/09/24/opencv-face-recognition/. The article covers thing in much deeper
 * All the images are sourced from google
