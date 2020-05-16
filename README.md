@@ -36,6 +36,7 @@ Run scripts in below order
 # Performance
 Accuracy of current model is not great. You can improve its accuracy by adding more labelled train images 
 Mean Accuracy: 56.67% (Standard Deviation: +/- 24.94%)
+
 ![leonardo dicaprio,kate winslet and Avengers](readme-images/avengers-kate-leonardo.png "leonardo dicaprio,kate winslet and Avengers")
 # References
 * I dont take any credit for this. I learned this entire implementation from article written by Adrian Rosebrock  in article https://www.pyimagesearch.com/2018/09/24/opencv-face-recognition/. The article covers thing in much deeper
