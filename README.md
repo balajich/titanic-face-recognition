@@ -38,6 +38,8 @@ Accuracy of current model is not great. You can improve its accuracy by adding m
 Mean Accuracy: 56.67% (Standard Deviation: +/- 24.94%)
 
 ![leonardo dicaprio,kate winslet and Avengers](readme-images/avengers-kate-leonardo.png "leonardo dicaprio,kate winslet and Avengers")
+# Video 
+This tutorial can be accessed at https://youtu.be/fTk5oyXxP4o
 # References
 * I dont take any credit for this. I learned this entire implementation from article written by Adrian Rosebrock  in article https://www.pyimagesearch.com/2018/09/24/opencv-face-recognition/. The article covers thing in much deeper
 * All the images are sourced from google
